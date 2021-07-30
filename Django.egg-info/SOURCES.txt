@@ -4101,6 +4101,7 @@ docs/topics/testing/_images/django_unittest_classes_hierarchy.svg
 extras/Makefile
 extras/README.TXT
 extras/django_bash_completion
+js_tests/.DS_Store
 js_tests/tests.html
 js_tests/admin/DateTimeShortcuts.test.js
 js_tests/admin/SelectBox.test.js
@@ -4113,6 +4114,7 @@ js_tests/admin/jsi18n-mocks.test.js
 js_tests/gis/mapwidget.test.js
 scripts/manage_translations.py
 scripts/rpm-install.sh
+tests/.DS_Store
 tests/.coveragerc
 tests/README.rst
 tests/runtests.py
