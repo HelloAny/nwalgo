@@ -22,6 +22,31 @@
         overflow: hidden;
         overflow-x: scroll;
       }
+      .radio-group {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+      }
+      .radio-group div {
+        margin-top: 20px;
+        width: 200px;
+      }
+
+      .score-group {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+      }
+      .score-group div {
+        margin-top: 20px;
+        width: 200px;
+      }
+      .control-wrap{
+        display: flex;
+        justify-content: center;
+      }
     </style>
   </head>
   <body>
@@ -47,6 +72,65 @@
       />
       <button class="uk-button uk-button-primary">compile</button>
     </div>
+    <div class="control-wrap">
+      <div class="radio-group">
+        <div>
+          <input
+            class="uk-radio"
+            type="radio"
+            id="standard"
+            name="drone"
+            value="standard"
+            checked
+          />
+  
+          <label for="standard">标准动态规划</label>
+        </div>
+        <div>
+          <input class="uk-radio" type="radio" id="nw" name="drone" value="nw" />
+          <label for="nw">Needleman-Wunsch</label>
+        </div>
+        <div>
+          <input class="uk-radio" type="radio" id="sw" name="drone" value="sw" />
+          <label for="sw">Smith-Waterman</label>
+        </div>
+      </div>
+      <div class="score-group">
+        <div>
+          match得分：<input
+            class="uk-input"
+            type="text"
+            value="1"
+            style="width: 50px"
+          />
+        </div>
+        <div>
+          mismatch得分：<input
+            class="uk-input"
+            type="text"
+            value="-1"
+            style="width: 50px"
+          />
+        </div>
+        <div>
+          gap得分：<input
+            class="uk-input"
+            type="text"
+            value="1"
+            style="width: 50px"
+          />
+        </div>
+        <div>
+          extend gap得分：<input
+            class="uk-input"
+            type="text"
+            value="-1"
+            style="width: 50px"
+          />
+        </div>
+      </div>
+    </div>
+    
 
     <div id="app"></div>
   </body>
@@ -118,13 +202,19 @@
           {
             idx: [0, 0],
             value: "a",
-            bound: [2, 2],
+            bound: [3, 3],
             isTarget: true
           },
           {
             idx: [0, 1],
             value: "b",
-            bound: [2, 2],
+            bound: [3, 3],
+            isTarget: false
+          },
+          {
+            idx: [0, 2],
+            value: "b",
+            bound: [3, 3],
             isTarget: false
           }
         ],
@@ -132,13 +222,39 @@
           {
             idx: [1, 0],
             value: "c",
-            bound: [2, 2],
+            bound: [3, 3],
             isTarget: true
           },
           {
             idx: [1, 1],
             value: "d",
-            bound: [2, 2],
+            bound: [3, 3],
+            isTarget: true
+          },
+          {
+            idx: [1, 2],
+            value: "d",
+            bound: [3, 3],
+            isTarget: true
+          }
+        ],
+        [
+          {
+            idx: [2, 0],
+            value: "c",
+            bound: [3, 3],
+            isTarget: true
+          },
+          {
+            idx: [2, 1],
+            value: "d",
+            bound: [3, 3],
+            isTarget: true
+          },
+          {
+            idx: [2, 2],
+            value: "d",
+            bound: [3, 3],
             isTarget: true
           }
         ]
@@ -153,7 +269,8 @@
             const renderItem = new Node(idx, value, bound, isTarget);
             return renderItem.render();
           });
-          validColItemList[index] = "<div style='display:flex'>" + colItem.join("") + "</div>";
+          validColItemList[index] =
+            "<div style='display:flex'>" + colItem.join("") + "</div>";
         }, "");
         return "<div>" + validColItemList.join("") + "</div>";
       }
