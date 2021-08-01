@@ -13,6 +13,11 @@
     <!-- UIkit JS -->
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.1/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.7.1/dist/js/uikit-icons.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.js"></script>
+    <script
+      async
+      src="https://cdn.bootcdn.net/ajax/libs/lodash.js/4.17.21/lodash.js"
+    ></script>
     <title>Document</title>
     <style>
       #app {
@@ -43,9 +48,13 @@
         margin-top: 20px;
         width: 200px;
       }
-      .control-wrap{
+      .control-wrap {
         display: flex;
         justify-content: center;
+      }
+      .box:hover {
+        transition: all 0.3s;
+        transform: scale(1.05);
       }
     </style>
   </head>
@@ -83,15 +92,27 @@
             value="standard"
             checked
           />
-  
+
           <label for="standard">标准动态规划</label>
         </div>
         <div>
-          <input class="uk-radio" type="radio" id="nw" name="drone" value="nw" />
+          <input
+            class="uk-radio"
+            type="radio"
+            id="nw"
+            name="drone"
+            value="nw"
+          />
           <label for="nw">Needleman-Wunsch</label>
         </div>
         <div>
-          <input class="uk-radio" type="radio" id="sw" name="drone" value="sw" />
+          <input
+            class="uk-radio"
+            type="radio"
+            id="sw"
+            name="drone"
+            value="sw"
+          />
           <label for="sw">Smith-Waterman</label>
         </div>
       </div>
@@ -130,7 +151,6 @@
         </div>
       </div>
     </div>
-    
 
     <div id="app"></div>
   </body>
@@ -146,7 +166,7 @@
         width = 70;
         height = 70;
         // args Bound [row, col]
-        constructor(idx, value, bound, target) {
+        constructor(idx, value, target, bound) {
           this.index = idx;
           this.value = value;
           this.bound = bound;
@@ -165,6 +185,7 @@
             };
           }
         }
+
         _isBound(rightLine, bottomLine) {
           const [row, col] = this.bound;
           if (rightLine >= row - 1 && bottomLine >= col - 1) {
@@ -177,6 +198,7 @@
             return [false, false];
           }
         }
+
         render() {
           const { value, isRight, isBottom, isTarget } = this._initFrameAssets(
             this.index
@@ -200,73 +222,127 @@
       const bundle = [
         [
           {
-            idx: [0, 0],
-            value: "a",
-            bound: [3, 3],
+            value: 1,
             isTarget: true
           },
           {
-            idx: [0, 1],
-            value: "b",
-            bound: [3, 3],
+            value: 2,
             isTarget: false
           },
           {
-            idx: [0, 2],
-            value: "b",
-            bound: [3, 3],
+            value: 3,
             isTarget: false
           }
         ],
         [
           {
-            idx: [1, 0],
-            value: "c",
-            bound: [3, 3],
+            value: 3,
             isTarget: true
           },
           {
-            idx: [1, 1],
-            value: "d",
-            bound: [3, 3],
+            value: 4,
             isTarget: true
           },
           {
-            idx: [1, 2],
-            value: "d",
-            bound: [3, 3],
+            value: 5,
             isTarget: true
           }
         ],
         [
           {
-            idx: [2, 0],
-            value: "c",
-            bound: [3, 3],
+            value: 6,
             isTarget: true
           },
           {
-            idx: [2, 1],
-            value: "d",
-            bound: [3, 3],
+            value: 7,
             isTarget: true
           },
           {
-            idx: [2, 2],
-            value: "d",
-            bound: [3, 3],
+            value: 8,
             isTarget: true
           }
         ]
       ];
-      const NodeItem = new Node([1, 0], "s", [2, 2], true);
+
+      class NodeGroup extends Node {
+        constructor(sequence, compilation) {
+          super();
+          this.sequenceString = sequence;
+          this.compilation = compilation;
+        }
+
+        _parseVendorList(vendorList) {
+          const { sequenceString, compilation } = this;
+
+          const [row, col] = sequenceString.map(item => item.split(""));
+          console.log(row, col);
+          const resultBundle = createScheduleBundle([row, col]);
+          console.log(resultBundle);
+          return resultBundle;
+        }
+
+        render() {
+          return this._parseVendorList();
+        }
+      }
+
+      function createScheduleBundle(sequence) {
+        const [rowQuene, colQuene] = sequence;
+
+        const defaultNode = {
+          isTarget: false
+        };
+
+        if (rowQuene.length === colQuene.length) {
+          return colQuene.concat("").map((item, index, selfQuene) => {
+            if (index === 0) {
+              return [
+                {
+                  ...defaultNode,
+                  value: ""
+                },
+                ...rowQuene.map((rowItem, rowIndex) => {
+                  return {
+                    ...defaultNode,
+                    value: rowItem
+                  };
+                })
+              ];
+            } else {
+              return [
+                {
+                  ...defaultNode,
+                  value: selfQuene[index - 1]
+                }
+              ];
+            }
+          });
+        }
+      }
+
+      function concatBundle(hdBundle, bdBundle) {
+        return hdBundle.map((item, index) => {
+          if (index === 0) {
+            return item;
+          } else {
+            return item.concat(bdBundle[index - 1]);
+          }
+        });
+      }
+
+      const bundleList = new NodeGroup(["gdj", "dvf"]);
 
       function tapMerge() {
         let validColItemList = [];
-        bundle.forEach((ctx, index) => {
-          const colItem = ctx.map(item => {
-            const { idx, value, bound, isTarget } = item;
-            const renderItem = new Node(idx, value, bound, isTarget);
+        const newMergeList = concatBundle(bundleList.render(), bundle);
+        console.log(newMergeList);
+        newMergeList.forEach((ctx, index) => {
+          const colItem = ctx.map((item, colIndex) => {
+            const { value, isTarget } = item;
+            const renderItem = new Node([index, colIndex], value, isTarget, [
+              newMergeList.length,
+              ctx.length
+            ]);
             return renderItem.render();
           });
           validColItemList[index] =
@@ -277,6 +353,14 @@
       const renderContent = tapMerge();
 
       document.getElementById("app").innerHTML = renderContent;
+
+      const resp = axios.post("http://127.0.0.1:8000/runoob", {
+        data: {
+          name: 1
+        }
+      });
+
+      console.log(resp);
     })();
   </script>
 </html>
