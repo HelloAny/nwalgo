@@ -56,6 +56,11 @@
         transition: all 0.3s;
         transform: scale(1.05);
       }
+      .nw_item {
+        margin-bottom: 20px;
+      }
+      .root {
+      }
     </style>
   </head>
   <body>
@@ -68,18 +73,22 @@
     </nav>
     <div style="text-align: center; margin-top: 30px">
       <input
+        id="seq1"
         class="uk-input"
         type="text"
         placeholder="first DNA/RNA"
         style="width: 500px"
       />
       <input
+        id="seq2"
         class="uk-input"
         type="text"
         placeholder="second DNA/RNA"
         style="width: 500px"
       />
-      <button class="uk-button uk-button-primary">compile</button>
+      <button onclick="compile()" class="uk-button uk-button-primary">
+        compile
+      </button>
     </div>
     <div class="control-wrap">
       <div class="radio-group">
@@ -117,250 +126,93 @@
         </div>
       </div>
       <div class="score-group">
-        <div>
+        <div style="width: 350px">
           match得分：<input
             class="uk-input"
-            type="text"
-            value="1"
+            type="number"
+            style="width: 100px"
+            value="5"
             style="width: 50px"
+            id="match"
           />
         </div>
-        <div>
+        <div style="width: 350px">
           mismatch得分：<input
             class="uk-input"
-            type="text"
-            value="-1"
+            type="number"
+            style="width: 100px"
+            value="-7"
             style="width: 50px"
+            id="mismatch"
           />
         </div>
-        <div>
+        <div style="width: 350px">
           gap得分：<input
             class="uk-input"
-            type="text"
-            value="1"
+            type="number"
+            style="width: 100px"
+            value="-5"
             style="width: 50px"
+            id="gap"
           />
         </div>
-        <div>
+        <div style="width: 350px">
           extend gap得分：<input
             class="uk-input"
-            type="text"
+            type="number"
+            style="width: 100px"
             value="-1"
             style="width: 50px"
+            id="extendgap"
           />
         </div>
       </div>
     </div>
-
-    <div id="app"></div>
+    <div id="root"></div>
   </body>
   <script>
-    (function () {
-      const TARGET_FORM = "FORM";
-
-      function isNumber(param) {
-        return typeof param === "number";
+    (async function () {
+      function isNumber(val) {
+        if (typeof val !== "number") {
+          return false;
+        }
+        return true;
       }
+      compile = async function () {
+        const seq1 = "*" + document.getElementById("seq1").value;
+        const seq2 = "*" + document.getElementById("seq2").value;
+        const match = document.getElementById("match").value;
+        const mismatch = document.getElementById("mismatch").value;
+        const gap = document.getElementById("gap").value;
+        const extgap = document.getElementById("extendgap").value;
 
-      class Node {
-        width = 70;
-        height = 70;
-        // args Bound [row, col]
-        constructor(idx, value, target, bound) {
-          this.index = idx;
-          this.value = value;
-          this.bound = bound;
-          this.target = target;
-        }
-
-        _initFrameAssets(pathPass) {
-          const [firIdx, sedIdx] = pathPass;
-          if (isNumber(firIdx) && isNumber(sedIdx)) {
-            const [isRight, isBottom] = this._isBound(firIdx, sedIdx);
-            return {
-              value: this.value,
-              isTarget: this.target,
-              isRight,
-              isBottom
-            };
-          }
-        }
-
-        _isBound(rightLine, bottomLine) {
-          const [row, col] = this.bound;
-          if (rightLine >= row - 1 && bottomLine >= col - 1) {
-            return [true, true];
-          } else if (rightLine >= row - 1 && bottomLine < col - 1) {
-            return [false, true];
-          } else if (rightLine < row - 1 && bottomLine >= col - 1) {
-            return [true, false];
-          } else {
-            return [false, false];
-          }
-        }
-
-        render() {
-          const { value, isRight, isBottom, isTarget } = this._initFrameAssets(
-            this.index
-          );
-          return [
-            `<div style="border: 1px solid black; border-bottom: ${
-              isBottom ? "1px solid black" : "0px"
-            };border-right: ${isRight ? "1px solid black" : "0px"};background:${
-              isTarget ? "#eeeeee" : "white"
-            };width: ${this.width}px;height: ${
-              this.height
-            }px;text-align:center;line-height:${
-              this.height
-            }px;font-size:24px">`,
-            `${value}`,
-            `</div>`
-          ].join("");
-        }
-      }
-
-      const bundle = [
-        [
-          {
-            value: 1,
-            isTarget: true
-          },
-          {
-            value: 2,
-            isTarget: false
-          },
-          {
-            value: 3,
-            isTarget: false
-          }
-        ],
-        [
-          {
-            value: 3,
-            isTarget: true
-          },
-          {
-            value: 4,
-            isTarget: true
-          },
-          {
-            value: 5,
-            isTarget: true
-          }
-        ],
-        [
-          {
-            value: 6,
-            isTarget: true
-          },
-          {
-            value: 7,
-            isTarget: true
-          },
-          {
-            value: 8,
-            isTarget: true
-          }
-        ]
-      ];
-
-      class NodeGroup extends Node {
-        constructor(sequence, compilation) {
-          super();
-          this.sequenceString = sequence;
-          this.compilation = compilation;
-        }
-
-        _parseVendorList(vendorList) {
-          const { sequenceString, compilation } = this;
-
-          const [row, col] = sequenceString.map(item => item.split(""));
-          console.log(row, col);
-          const resultBundle = createScheduleBundle([row, col]);
-          console.log(resultBundle);
-          return resultBundle;
-        }
-
-        render() {
-          return this._parseVendorList();
-        }
-      }
-
-      function createScheduleBundle(sequence) {
-        const [rowQuene, colQuene] = sequence;
-
-        const defaultNode = {
-          isTarget: false
+        const score_dic = {
+          match: Number(match),
+          mismatch: Number(mismatch),
+          gap: Number(gap),
+          extgap: Number(extgap)
         };
 
-        if (rowQuene.length === colQuene.length) {
-          return colQuene.concat("").map((item, index, selfQuene) => {
-            if (index === 0) {
-              return [
-                {
-                  ...defaultNode,
-                  value: ""
-                },
-                ...rowQuene.map((rowItem, rowIndex) => {
-                  return {
-                    ...defaultNode,
-                    value: rowItem
-                  };
-                })
-              ];
-            } else {
-              return [
-                {
-                  ...defaultNode,
-                  value: selfQuene[index - 1]
-                }
-              ];
-            }
-          });
-        }
-      }
-
-      function concatBundle(hdBundle, bdBundle) {
-        return hdBundle.map((item, index) => {
-          if (index === 0) {
-            return item;
-          } else {
-            return item.concat(bdBundle[index - 1]);
+        const resp = await axios.post("http://127.0.0.1:8000/runoob", {
+          data: {
+            seq1,
+            seq2,
+            score_dic,
+            method: 1
           }
         });
-      }
-
-      const bundleList = new NodeGroup(["gdj", "dvf"]);
-
-      function tapMerge() {
-        let validColItemList = [];
-        const newMergeList = concatBundle(bundleList.render(), bundle);
-        console.log(newMergeList);
-        newMergeList.forEach((ctx, index) => {
-          const colItem = ctx.map((item, colIndex) => {
-            const { value, isTarget } = item;
-            const renderItem = new Node([index, colIndex], value, isTarget, [
-              newMergeList.length,
-              ctx.length
-            ]);
-            return renderItem.render();
-          });
-          validColItemList[index] =
-            "<div style='display:flex'>" + colItem.join("") + "</div>";
-        }, "");
-        return "<div>" + validColItemList.join("") + "</div>";
-      }
-      const renderContent = tapMerge();
-
-      document.getElementById("app").innerHTML = renderContent;
-
-      const resp = axios.post("http://127.0.0.1:8000/runoob", {
-        data: {
-          name: 1
+        console.log(resp);
+        const div = document.createElement("div");
+        for (let i = 0; i < resp.data.ls.length; i = i + 2) {
+          const div = document.createElement("div");
+          div.innerHTML = `<div class="nw_item"><div style="text-align:center">${
+            resp.data.ls[i]
+          }</div><div style="text-align:center">${
+            resp.data.ls[i + 1]
+          }</div></div>`;
+          document.getElementById("root").appendChild(div);
         }
-      });
-
-      console.log(resp);
+      };
     })();
   </script>
 </html>
